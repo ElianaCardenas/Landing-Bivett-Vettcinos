@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bivett · Tu vettcino, más cerca de ti</title>
+<meta name="description" content="Agenda consulta general, vacunación, profilaxis, desparasitación y orientación veterinaria en tu sede Bivett más cercana: Castropol, Industriales, Alto de las Palmas o Bello.">
+<meta name="theme-color" content="#1E255F">
+<link rel="icon" type="image/png" href="System%20design/Logos/1_Favicon-08-grande.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+<style>
+  /* ============ FONTS ============ */
+  /* Barlow (Google Fonts, linked above) is the primary source — properly hinted
+     for screen sizes. The local .ttf files below are registered under a separate
+     "Barlow Offline" family and only load if Google Fonts is unreachable, per the
+     brand system's offline requirement (see font-family stack on body/.btn/.logo). */
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.italic.ttf") format("truetype");font-weight:400;font-style:italic;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.medium.ttf") format("truetype");font-weight:500;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.semibold.ttf") format("truetype");font-weight:600;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.bold.ttf") format("truetype");font-weight:700;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.extrabold.ttf") format("truetype");font-weight:800;font-style:normal;font-display:swap;}
+  @font-face{font-family:"Barlow Offline";src:url("System%20design/Fonts/barlow.black.ttf") format("truetype");font-weight:900;font-style:normal;font-display:swap;}
+
+  /* ============ DESIGN TOKENS — Bivett brand system ============ */
+  :root{
+    --navy:#1E255F;
+    --navy-btn:#1E255E;
+    --navy-hover:#151B4A;
+    --navy-active:#0F1436;
+    --cream:#FDF7EA;
+    --cream-btn:#FBF5E8;
+    --salvia:#8BB892;
+    --celeste:#C7E1E7;
+    --beige:#CCC5B0;
+    --polar:#E4EFE7;
+    --claro:#DEFFD5;
+    --bebe:#94BCFF;
+    --maya:#7AC3FD;
+    --oscuro:#012F85;
+    --piedra:#5C6480;
+    --verde-cta:#89B690;
+    --verde-profundo:#7CB78C;
+    --verde-hover:#77A67E;
+    --verde-active:#6B9872;
+    --link:#2E6B78;
+    --white:#FFFFFF;
+    --disabled-bg:#DAD7CB;
+    --disabled-text:#9A978D;
+
+    --shadow-card: 0 6px 22px rgba(30,37,94,.08);
+    --shadow-fab: 0 8px 22px rgba(30,37,94,.28);
+
+    --radius-card: 18px;
+    --radius-pill: 999px;
+
+    --container: 1180px;
+    --gutter: clamp(20px, 5vw, 64px);
+
+    --dur-fast: 180ms;
+    --dur-med: 300ms;
+    --ease-out: cubic-bezier(.16,1,.3,1);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important;}
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:"Barlow", "Barlow Offline", system-ui, sans-serif;
+    background:var(--cream);
+    color:var(--navy);
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    font-variant-ligatures:none;
+    font-feature-settings:"liga" 0, "clig" 0, "calt" 0;
+  }
+  img{max-width:100%;display:block;}
+  a{color:var(--link);text-decoration-thickness:1.5px;text-underline-offset:2px;}
+  a:hover{color:var(--navy);}
+  a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible, select:focus-visible{
+    outline:3px solid var(--maya);
+    outline-offset:2px;
+  }
+  h1,h2,h3,h4{margin:0;color:var(--navy);font-weight:900;letter-spacing:-.02em;}
+  section{position:relative;}
+  .container{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);}
+
+
+  h1, .h1{font-size:34px;line-height:1.1;font-weight:900;letter-spacing:-.02em;}
+  h2, .h2{font-size:28px;line-height:1.15;font-weight:800;letter-spacing:-.01em;}
+  h3, .h3{font-size:22px;line-height:1.25;font-weight:700;}
+  h4, .h4{font-size:18px;line-height:1.35;font-weight:600;}
+  p{margin:0 0 16px;color:var(--navy);}
+  .body-muted{color:var(--piedra);}
+  .small{font-size:12px;line-height:1.5;letter-spacing:.01em;color:var(--piedra);}
+
+  @media (min-width:768px){
+    h1,.h1{font-size:44px;}
+    h2,.h2{font-size:34px;}
+    h3,.h3{font-size:24px;}
+  }
+  @media (min-width:1024px){
+    h1,.h1{font-size:56px;line-height:1.05;}
+    h2,.h2{font-size:40px;line-height:1.1;}
+    h3,.h3{font-size:26px;line-height:1.2;}
+    h4,.h4{font-size:20px;line-height:1.3;}
+    p{font-size:18px;line-height:1.6;}
+  }
+
+  /* ============ BUTTONS ============ */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    min-height:44px;
+    padding:12px 22px;
+    border-radius:var(--radius-pill);
+    font-family:"Barlow","Barlow Offline",sans-serif;
+    font-weight:700;font-size:16px;letter-spacing:.01em;
+    border:none;cursor:pointer;
+    text-decoration:none;
+    white-space:nowrap;
+    transition:background-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  @media (min-width:768px){ .btn{padding:14px 26px;font-size:17px;} }
+  .btn svg{width:18px;height:18px;flex:none;}
+
+  .btn-primary{background:var(--navy-btn);color:var(--cream-btn);}
+  .btn-primary:hover{background:var(--navy-hover);color:var(--cream-btn);}
+  .btn-primary:active{background:var(--navy-active);transform:translateY(1px);}
+  .btn-primary:disabled{background:var(--disabled-bg);color:var(--disabled-text);cursor:not-allowed;}
+
+  .btn-cta{background:var(--verde-cta);color:var(--navy-btn);}
+  .btn-cta:hover{background:var(--verde-hover);color:var(--navy-btn);}
+  .btn-cta:active{background:var(--verde-active);transform:translateY(1px);}
+
+  .btn-cream{background:var(--cream-btn);color:var(--navy);}
+  .btn-cream:hover{background:var(--white);}
+
+  .btn-ghost{background:transparent;color:var(--navy);border:2px solid var(--navy);padding:10px 20px;}
+  .btn-ghost:hover{background:var(--navy);color:var(--cream-btn);}
+
+  .btn-ghost-verde{background:transparent;color:var(--verde-profundo);border:2px solid var(--verde-cta);padding:10px 20px;}
+  .btn-ghost-verde:hover{background:var(--verde-cta);color:var(--navy-btn);}
+
+  .btn-block{width:100%;}
+
+  /* ============ HEADER ============ */
+  .skip-link{
+    position:absolute;left:-9999px;top:0;background:var(--navy);color:var(--cream);padding:12px 20px;z-index:200;border-radius:0 0 8px 0;
+  }
+  .skip-link:focus{left:0;}
+
+  header.site-header{
+    position:sticky;top:0;z-index:100;
+    background:var(--navy);
+    border-bottom:1px solid rgba(253,247,234,.12);
+  }
+  .nav-row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px var(--gutter);
+    max-width:var(--container);margin:0 auto;
+    gap:16px;
+  }
+  .logo{
+    display:inline-flex;align-items:center;
+    text-decoration:none;flex:none;
+  }
+  .logo img{height:56px;width:auto;display:block;}
+  @media (min-width:768px){ .logo img{height:66px;} }
+  nav.primary-nav{display:none;}
+  nav.primary-nav ul{display:flex;gap:32px;list-style:none;margin:0;padding:0;}
+  nav.primary-nav a{
+    color:var(--cream);text-decoration:none;font-weight:600;font-size:16px;
+    padding:6px 2px;border-bottom:2px solid transparent;
+  }
+  nav.primary-nav a:hover{border-bottom-color:var(--verde-cta);}
+  .header-actions{display:flex;align-items:center;gap:12px;}
+  .header-actions .btn-header-cta{display:none;}
+  .nav-toggle{
+    display:inline-flex;background:none;border:none;padding:8px;cursor:pointer;color:var(--cream);flex:none;
+  }
+  .nav-toggle svg{width:26px;height:26px;}
+  @media (min-width:1024px){
+    nav.primary-nav{display:block;}
+    .nav-toggle{display:none;}
+    .header-actions .btn-header-cta{display:inline-flex;}
+  }
+  .mobile-menu{
+    display:none;flex-direction:column;gap:2px;
+    padding:8px var(--gutter) 20px;
+    background:var(--navy);border-top:1px solid rgba(253,247,234,.12);
+  }
+  .mobile-menu.is-open{display:flex;}
+  .mobile-menu a{
+    color:var(--cream);text-decoration:none;font-weight:600;padding:12px 4px;border-bottom:1px solid rgba(253,247,234,.14);
+  }
+  .mobile-menu .btn-header-cta{margin-top:10px;justify-content:center;}
+  @media (min-width:1024px){ .mobile-menu{display:none !important;} }
+
+  /* Hero CTA: filled salvia by default, becomes a green ghost outline on hover */
+  .btn-salvia-ghost{
+    background:var(--verde-cta);color:var(--navy-btn);
+    border:2px solid transparent;
+  }
+  .btn-salvia-ghost:hover{
+    background:transparent;color:var(--verde-cta);border-color:var(--verde-cta);
+  }
+  .btn-salvia-ghost:active{background:var(--verde-active);color:var(--navy-btn);border-color:transparent;transform:translateY(1px);}
+
+  /* Header CTA: filled salvia by default, becomes filled cream on hover */
+  .btn-header-cta{
+    background:var(--verde-cta);color:var(--navy-btn);
+    border:2px solid transparent;
+  }
+  .btn-header-cta:hover{
+    background:var(--cream);color:var(--navy);border-color:var(--cream);
+  }
+  .btn-header-cta:active{background:var(--verde-active);color:var(--navy-btn);border-color:transparent;transform:translateY(1px);}
+
+  /* ============ HERO ============ */
+  .hero{
+    padding:48px 0 72px;
+    background:
+      radial-gradient(60% 60% at 82% 18%, rgba(139,184,146,.35), transparent 70%),
+      var(--cream);
+    overflow:hidden;
+  }
+  .hero .container{
+    display:grid;gap:40px;align-items:center;
+  }
+  .hero .container > *{min-width:0;}
+  @media (min-width:960px){
+    .hero .container{grid-template-columns:0.95fr 1.05fr;gap:24px;}
+    .hero{padding:64px 0 100px;}
+  }
+  .hero-h1{margin-bottom:28px;}
+  .hero-copy p{max-width:52ch;}
+  .hero-cta-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:28px;align-items:center;}
+
+  .hero-media{display:flex;justify-content:center;}
+  .hero-carousel{
+    position:relative;width:100%;max-width:820px;margin:0 auto;
+    aspect-ratio:1629/1482;
+  }
+  .hero-slide{
+    position:absolute;inset:0;
+    width:100%;height:100%;object-fit:contain;
+    opacity:0;
+    transition:opacity 1200ms ease-in-out;
+    filter:drop-shadow(0 24px 40px rgba(30,37,94,.22));
+  }
+  .hero-slide.is-active{opacity:1;}
+
+  /* ============ REVEAL ANIMATION ============ */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);}
+  .reveal.is-visible{opacity:1;transform:none;}
+  .reveal-stagger.is-visible > *{opacity:1;transform:none;}
+  .reveal-stagger > *{opacity:0;transform:translateY(16px);transition:opacity var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);}
+  .reveal-stagger > *:nth-child(1){transition-delay:0ms;}
+  .reveal-stagger > *:nth-child(2){transition-delay:60ms;}
+  .reveal-stagger > *:nth-child(3){transition-delay:120ms;}
+  .reveal-stagger > *:nth-child(4){transition-delay:180ms;}
+  .reveal-stagger > *:nth-child(5){transition-delay:240ms;}
+
+  /* ============ TRUST STRIP ============ */
+  .trust-strip{background:#f2f2f2;padding:22px 0;}
+  .trust-strip .container{
+    display:flex;flex-wrap:wrap;gap:14px 32px;align-items:center;justify-content:center;text-align:center;
+  }
+  .trust-strip p{
+    margin:0;font-weight:600;
+    font-size:13px;line-height:1.5;
+    max-width:100%;
+  }
+  @media (min-width:640px){ .trust-strip p{font-size:14px;} }
+  @media (min-width:960px){ .trust-strip p{font-size:15px;} }
+  .trust-badges{display:flex;align-items:center;justify-content:center;flex:none;}
+  .trust-badges img{height:32px;width:auto;}
+  @media (min-width:640px){ .trust-badges img{height:36px;} }
+  @media (min-width:960px){ .trust-badges img{height:42px;} }
+
+  /* ============ SECTION SPACING ============ */
+  .section{padding:64px 0;}
+  @media (min-width:768px){ .section{padding:88px 0;} }
+  .section-head{max-width:640px;margin-bottom:40px;}
+  .section-head h2{margin-bottom:18px;}
+  .section-head p{font-size:17px;}
+  .section-head-center{max-width:720px;margin-left:auto;margin-right:auto;text-align:center;}
+  .heading-oneline{white-space:nowrap;font-size:clamp(13px, 4vw, 40px);}
+  .text-verde-cta{color:var(--salvia);}
+  .text-bebe{color:var(--bebe);}
+
+  /* ============ SERVICIOS (slider) ============ */
+  .services-slider{position:relative;}
+  .services-slider-viewport{
+    display:flex;gap:20px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    scroll-padding-left:var(--gutter);
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    margin:0 calc(var(--gutter) * -1);
+    padding:4px var(--gutter) 8px;
+  }
+  .services-slider-viewport::-webkit-scrollbar{display:none;}
+
+  .card-service{
+    flex:0 0 auto;
+    width:min(340px,85vw);
+    scroll-snap-align:start;
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;
+    background:var(--white);
+    border:1.5px solid var(--bebe);
+    border-radius:24px;
+    padding:28px;
+  }
+  @media (min-width:640px){ .card-service{width:min(380px,48vw);} }
+  @media (min-width:1024px){ .card-service{width:380px;} }
+  .card-service .service-photo{
+    width:100%;height:auto;aspect-ratio:1081/703;object-fit:cover;
+    border-radius:16px;margin-bottom:24px;
+  }
+  .card-service h3{margin-bottom:12px;color:var(--navy);}
+  .card-service p{color:var(--piedra);flex:1;margin-bottom:24px;font-size:16px;}
+  .btn-service{align-self:center;width:100%;justify-content:center;background:var(--bebe);color:var(--navy);border:2px solid transparent;}
+  .btn-service:hover{background:#5e9efc;color:var(--navy);}
+  .btn-service:active{background:var(--bebe);transform:translateY(1px);}
+
+  .slider-controls{
+    position:absolute;top:50%;left:-8px;right:-8px;transform:translateY(-50%);
+    display:flex;justify-content:space-between;
+    pointer-events:none;
+  }
+  .slider-arrow{
+    width:44px;height:44px;border-radius:50%;flex:none;
+    background:var(--navy);color:var(--cream);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow-card);
+    pointer-events:auto;
+    transition:background-color var(--dur-fast) var(--ease-out);
+  }
+  .slider-arrow:hover{background:var(--navy-hover);}
+  .slider-arrow:active{background:var(--navy-active);}
+  .slider-arrow svg{width:20px;height:20px;}
+  .slider-arrow:disabled{opacity:.35;cursor:not-allowed;}
+
+  /* ============ SEDES ============ */
+  .sedes-layout{display:grid;grid-template-columns:1fr;gap:32px;align-items:start;}
+  @media (min-width:960px){ .sedes-layout{grid-template-columns:1fr 1fr;gap:28px;align-items:stretch;} }
+  .sedes-layout > *{min-width:0;}
+  /* Mobile: map first, list below. Desktop: list left, map sticky right (reset via media query). */
+  .map-panel{order:-1;}
+  @media (min-width:960px){ .map-panel{order:0;} }
+
+  .sede-list{display:flex;flex-direction:column;gap:18px;}
+  .card-sede{
+    display:grid;grid-template-columns:38%1fr;
+    background:var(--white);border-radius:var(--radius-card);
+    box-shadow:var(--shadow-card);
+    overflow:hidden;
+    border:2px solid transparent;
+    cursor:pointer;
+    text-align:left;
+    font-family:inherit;
+    padding:0;
+    min-width:0;
+  }
+  .card-sede > *{min-width:0;}
+  .card-sede.is-active{border-color:var(--verde-cta);}
+  @media (max-width:520px){ .card-sede{grid-template-columns:1fr;} }
+  .card-sede .sede-photo{height:100%;min-height:150px;object-fit:cover;width:100%;}
+  .card-sede .sede-body{padding:20px 22px;display:flex;flex-direction:column;gap:8px;}
+  .card-sede .sede-badge{
+    display:inline-flex;align-self:flex-start;align-items:center;gap:6px;
+    background:var(--polar);color:var(--verde-profundo);font-weight:700;font-size:12px;
+    padding:4px 10px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.06em;
+  }
+  .card-sede .meta-row{display:flex;gap:8px;align-items:flex-start;color:var(--piedra);font-size:14px;}
+  .card-sede .meta-row svg{width:18px;height:18px;flex:none;margin-top:1px;color:var(--verde-profundo);}
+  .card-sede .sede-actions{margin-top:6px;}
+
+  .map-panel{
+    position:relative;border-radius:var(--radius-card);overflow:hidden;box-shadow:var(--shadow-card);
+    background:var(--celeste);
+    min-height:340px;
+  }
+  @media (min-width:960px){ .map-panel{position:sticky;top:96px;align-self:stretch;height:auto;min-height:0;} }
+  #sedesMap{width:100%;height:100%;min-height:340px;}
+  #sedesMap .leaflet-tile-pane{filter:grayscale(100%);}
+  .sede-pin{background:transparent;border:none;}
+  .sede-pin-inner{
+    width:36px;height:36px;border-radius:50% 50% 50% 0;
+    background:var(--navy-btn);transform:rotate(-45deg);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 10px rgba(30,37,94,.35);
+    transition:background-color var(--dur-fast), transform var(--dur-fast);
+  }
+  .sede-pin-inner svg{width:16px;height:16px;color:var(--cream-btn);transform:rotate(45deg);}
+  .sede-pin.is-active .sede-pin-inner{background:var(--verde-cta);transform:rotate(-45deg) scale(1.15);}
+  .leaflet-popup-content-wrapper{border-radius:12px;}
+  .leaflet-popup-content{font-family:"Barlow","Barlow Offline",sans-serif;font-weight:600;color:var(--navy);margin:10px 14px;}
+
+  /* ============ RESEÑAS ============ */
+  .reviews-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+  .reviews-grid > *{min-width:0;}
+  @media (min-width:768px){ .reviews-grid{grid-template-columns:repeat(3,1fr);} }
+  .card-review{
+    background:#f2f2f2;border-radius:var(--radius-card);padding:26px;box-shadow:var(--shadow-card);
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .stars{display:flex;gap:3px;color:var(--verde-cta);}
+  .stars svg{width:18px;height:18px;}
+  .card-review p{font-size:15.5px;color:var(--navy);opacity:.85;margin:0;}
+  .review-author{display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;color:var(--navy);}
+  .review-author .avatar{
+    width:36px;height:36px;border-radius:50%;background:var(--celeste);
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--navy);flex:none;
+  }
+  .reviews-cta{text-align:center;margin-top:32px;}
+
+  /* ============ CTA INTERMEDIO ============ */
+  .cta-band{
+    background:var(--bebe);
+    padding:56px 0;
+  }
+  .cta-band .container{
+    display:grid;grid-template-columns:1fr;gap:36px;align-items:center;
+  }
+  @media (min-width:768px){ .cta-band .container{grid-template-columns:1fr 1fr;gap:48px;} }
+  .cta-band .container > *{min-width:0;}
+  .cta-band-media img{width:100%;height:auto;border-radius:24px;display:block;}
+  .cta-band h2{color:var(--navy);}
+  .cta-band p{color:var(--navy);opacity:.8;max-width:48ch;margin:14px 0 28px;font-size:18px;}
+  .cta-band .btn-row{display:flex;flex-wrap:wrap;gap:16px;}
+
+  /* ============ FORM ============ */
+  .form-wrap{
+    display:grid;grid-template-columns:1fr;gap:36px;align-items:center;
+  }
+  .form-wrap > *{min-width:0;}
+  @media (min-width:900px){ .form-wrap{grid-template-columns:1fr 1fr;gap:56px;} }
+  .form-heading{margin-bottom:24px;}
+  .form-card{
+    background:var(--white);border-radius:var(--radius-card);padding:32px;box-shadow:var(--shadow-card);
+  }
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px;color:var(--navy);}
+  .field .req{color:var(--verde-profundo);}
+  .field input{
+    width:100%;min-height:48px;border-radius:12px;border:1.5px solid var(--beige);
+    padding:10px 14px;font-family:inherit;font-size:16px;color:var(--navy);background:#f2f2f2;
+    transition:border-color var(--dur-fast);
+  }
+  .field input:focus{border-color:var(--verde-cta);outline:none;}
+  .form-status{margin-top:14px;font-size:14px;font-weight:600;display:none;}
+
+  /* Custom "sede de interés" dropdown — rounded corners + green border/hover throughout */
+  .custom-select{position:relative;}
+  .custom-select-trigger{
+    width:100%;min-height:48px;border-radius:12px;border:1.5px solid var(--verde-cta);
+    padding:10px 14px;font-family:inherit;font-size:16px;color:var(--navy);background:#f2f2f2;
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    cursor:pointer;text-align:left;
+    transition:border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+  .custom-select-trigger svg{width:18px;height:18px;flex:none;color:var(--verde-profundo);transition:transform var(--dur-fast);}
+  .custom-select-trigger[aria-expanded="true"] svg{transform:rotate(180deg);}
+  .custom-select-trigger:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(139,184,146,.35);}
+  .custom-select-value.is-placeholder{color:var(--piedra);}
+  .custom-select-list{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;
+    background:#f2f2f2;border:1.5px solid var(--verde-cta);border-radius:12px;
+    list-style:none;margin:0;padding:6px;box-shadow:var(--shadow-card);
+    max-height:220px;overflow-y:auto;
+  }
+  .custom-select-list[hidden]{display:none;}
+  .custom-select-list li{
+    padding:10px 12px;border-radius:8px;cursor:pointer;color:var(--navy);font-size:16px;
+    transition:background-color var(--dur-fast), color var(--dur-fast);
+  }
+  .custom-select-list li:hover, .custom-select-list li.is-active{background:var(--verde-cta);color:var(--navy-btn);}
+  .form-status.is-visible{display:block;}
+
+  /* ============ FAQ ============ */
+  .faq-list{display:flex;flex-direction:column;gap:12px;}
+  .faq-item{
+    background:var(--white);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);
+  }
+  .faq-item summary{
+    list-style:none;cursor:pointer;padding:20px 24px;font-weight:700;font-size:17px;
+    display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--navy);
+  }
+  .faq-item summary::-webkit-details-marker{display:none;}
+  .faq-item .chevron{width:22px;height:22px;flex:none;transition:transform var(--dur-fast) var(--ease-out);color:var(--verde-profundo);}
+  .faq-item[open] .chevron{transform:rotate(180deg);}
+  .faq-item .faq-answer{padding:0 24px 22px;color:var(--piedra);font-size:16px;}
+
+  /* ============ FOOTER ============ */
+  footer.site-footer{background:var(--navy);color:var(--cream);padding:56px 0 28px;}
+  .footer-grid{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    gap:28px;margin-bottom:32px;
+  }
+  @media (min-width:768px){
+    .footer-grid{flex-direction:row;align-items:center;text-align:left;gap:48px;justify-content:flex-start;}
+    .footer-info-block{flex:0 1 380px;}
+    .footer-social-block{flex:none;}
+  }
+  .footer-brand{display:flex;align-items:center;}
+  .footer-brand img{height:76px;width:auto;flex:none;}
+  @media (min-width:768px){ .footer-brand img{height:88px;} }
+  footer.site-footer h3{color:var(--cream);margin-bottom:14px;}
+  footer.site-footer p{color:rgba(253,247,234,.75);}
+  footer.site-footer a{color:var(--cream);}
+  .footer-locations{
+    color:rgba(253,247,234,.85);
+    white-space:nowrap;
+    font-size:clamp(12px, 2vw, 15px);
+  }
+  .footer-social-heading{color:#FDF7EA;margin-bottom:12px;}
+  .footer-social{display:flex;flex-direction:column;align-items:center;gap:12px;}
+  @media (min-width:768px){ .footer-social{align-items:flex-start;} }
+  .footer-social a{
+    display:inline-flex;align-items:center;gap:10px;
+    text-decoration:none;font-weight:400;font-size:16px;
+    transition:color var(--dur-fast) var(--ease-out);
+  }
+  .footer-social a:hover{color:var(--salvia);}
+  .footer-social .social-icon{position:relative;display:inline-block;width:26px;height:26px;flex:none;}
+  .footer-social .social-icon img{
+    position:absolute;inset:0;width:100%;height:100%;
+    transition:opacity var(--dur-fast) var(--ease-out);
+  }
+  .footer-social .icon-hover{opacity:0;}
+  .footer-social a:hover .icon-hover{opacity:1;}
+  .footer-bottom{border-top:1px solid rgba(253,247,234,.18);padding-top:22px;font-size:13px;color:rgba(253,247,234,.6);display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between;}
+  .footer-bottom a{color:rgba(253,247,234,.85);}
+
+  /* ============ WHATSAPP FAB ============ */
+  .whatsapp-fab{
+    position:fixed;right:18px;bottom:18px;z-index:150;
+    width:66px;height:66px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:var(--shadow-fab);
+    text-decoration:none;
+    transition:transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+  }
+  .whatsapp-fab:hover{transform:scale(1.06);}
+  .whatsapp-fab.is-hidden{opacity:0;pointer-events:none;}
+  .whatsapp-fab img{width:100%;height:100%;display:block;}
+  @media (max-width:480px){ .whatsapp-fab{width:62px;height:62px;right:16px;bottom:16px;} }
+
+  .visually-hidden{
+    position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0;
+  }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Saltar al contenido principal</a>
+
+<header class="site-header">
+  <div class="nav-row">
+    <a href="#top" class="logo" aria-label="Bivett, centro veterinario, ir al inicio">
+      <img src="System%20design/Logos/1_Logo principal fondo oscuro-03.png" alt="Bivett" width="1044" height="576">
+    </a>
+    <nav class="primary-nav" aria-label="Navegación principal">
+      <ul>
+        <li><a href="#servicios">Servicios</a></li>
+        <li><a href="#sedes">Sedes</a></li>
+        <li><a href="#resenas">Reseñas</a></li>
+        <li><a href="#faq">Preguntas frecuentes</a></li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <a class="btn btn-header-cta" href="https://wa.me/573132476474?text=Hola%20Bivett%2C%20quiero%20agendar%20una%20cita" target="_blank" rel="noopener">Agendar una cita</a>
+      <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Abrir menú de navegación">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#servicios">Servicios</a>
+    <a href="#sedes">Sedes</a>
+    <a href="#resenas">Reseñas</a>
+    <a href="#faq">Preguntas frecuentes</a>
+    <a class="btn btn-header-cta" href="https://wa.me/573132476474?text=Hola%20Bivett%2C%20quiero%20agendar%20una%20cita" target="_blank" rel="noopener">Agendar una cita</a>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="top">
+    <div class="container">
+      <div class="hero-copy reveal">
+        <h1 class="hero-h1">Tu vettcino Bivett, más cerca de ti para el cuidado que tu perro o gato merece</h1>
+        <p>Ellos no siempre muestran cuando algo anda mal, pero un chequeo a tiempo puede ser la diferencia.</p>
+        <p>Consulta general, vacunación, profilaxis, desparasitación y más, en la sede que te quede más fácil.</p>
+        <div class="hero-cta-row">
+          <a class="btn btn-salvia-ghost" href="https://wa.me/573132476474?text=Hola%20Bivett%2C%20quiero%20agendar%20una%20cita" target="_blank" rel="noopener">
+            Agendar cita por WhatsApp
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="hero-media reveal">
+        <div class="hero-carousel" id="heroCarousel">
+          <img class="hero-slide is-active" src="System%20design/Imagenes/1_Hero_01.png" alt="Mujer sonriente sostiene a su perro en la sala de espera de un centro veterinario Bivett" width="1629" height="1482">
+          <img class="hero-slide" src="System%20design/Imagenes/1_Hero_02.png" alt="Hombre sonriente sostiene a su perro en un centro veterinario Bivett" width="1629" height="1493">
+          <img class="hero-slide" src="System%20design/Imagenes/1_Hero_03.png" alt="Gato y perro golden retriever juntos en un centro veterinario Bivett" width="1855" height="1494">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESPALDO SURA / CES ============ -->
+  <section class="trust-strip reveal">
+    <div class="container">
+      <p>El primer Centro Veterinario de Salud y Bienestar Animal respaldado por <strong>SURA</strong> y la <strong>Universidad CES</strong>.</p>
+      <div class="trust-badges">
+        <img src="System%20design/Logos/1_Logo sura-ces.png" alt="Logos SURA y Universidad CES" width="1337" height="385" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICIOS ============ -->
+  <section class="section" id="servicios" style="background:#ffffff;">
+    <div class="container">
+      <div class="section-head section-head-center reveal">
+        <h2>Tu perro no habla, pero sí manda señales, <span class="text-bebe">y tu vettcino Bivett sabe leerlas</span></h2>
+        <p class="body-muted">Los buenos vettcinos cuidan la salud y el bienestar de tu compañero, con consulta, vacunas, profilaxis y más, cerca de ti.</p>
+      </div>
+
+      <div class="services-slider reveal">
+      <div class="services-slider-viewport reveal-stagger" id="servicesSlider">
+
+        <article class="card-service">
+          <img class="service-photo" src="System%20design/Imagenes/1_Consulta%20general.png" alt="Veterinario y auxiliar atendiendo a una paciente con su perro en consulta general" width="1081" height="703">
+          <h3>Consulta general</h3>
+          <p>Para saber cómo está y actuar a tiempo si algo cambia.</p>
+          <a class="btn btn-service" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20consulta%20general" target="_blank" rel="noopener">Agendar →</a>
+        </article>
+
+        <article class="card-service">
+          <img class="service-photo" src="System%20design/Imagenes/1_Vacunaci%C3%B3n-80.png" alt="Vacunación de una mascota en Bivett" width="1081" height="703">
+          <h3>Vacunación</h3>
+          <p>Al día con las vacunas que lo protegen en cada etapa.</p>
+          <a class="btn btn-service" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20vacunaci%C3%B3n" target="_blank" rel="noopener">Agendar →</a>
+        </article>
+
+        <article class="card-service">
+          <img class="service-photo" src="System%20design/Imagenes/1_Profilaxis.png" alt="Profilaxis dental a una mascota en Bivett" width="1081" height="703">
+          <h3>Profilaxis</h3>
+          <p>Dientes sanos, sin dolor ni enfermedades que avancen en silencio.</p>
+          <a class="btn btn-service" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20profilaxis" target="_blank" rel="noopener">Agendar →</a>
+        </article>
+
+        <article class="card-service">
+          <img class="service-photo" src="System%20design/Imagenes/1_Desparasitaci%C3%B3n.png" alt="Desparasitación de una mascota en Bivett" width="1081" height="703">
+          <h3>Desparasitación</h3>
+          <p>Protegido por dentro y por fuera, todo el año.</p>
+          <a class="btn btn-service" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20desparasitaci%C3%B3n" target="_blank" rel="noopener">Agendar →</a>
+        </article>
+
+        <article class="card-service">
+          <img class="service-photo" src="System%20design/Imagenes/1_Orientaci%C3%B3n%20veterinaria.png" alt="Orientación veterinaria a un cuidador en Bivett" width="1081" height="702">
+          <h3>Orientación veterinaria</h3>
+          <p>Resolvemos tus dudas sobre alimentación, comportamiento y cuidados.</p>
+          <a class="btn btn-service" href="https://wa.me/573132476474?text=Hola%2C%20tengo%20una%20consulta%20de%20orientaci%C3%B3n%20veterinaria" target="_blank" rel="noopener">Agendar →</a>
+        </article>
+
+      </div>
+      <div class="slider-controls">
+        <button type="button" class="slider-arrow" id="servicesPrev" aria-label="Servicio anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <button type="button" class="slider-arrow" id="servicesNext" aria-label="Siguiente servicio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SEDES ============ -->
+  <section class="section" id="sedes" style="background:var(--claro);">
+    <div class="container">
+      <div class="section-head section-head-center reveal">
+        <h2 class="heading-oneline">Tu vettcino Bivett también está cerca de ti</h2>
+        <p class="body-muted">Cuéntanos qué sede te queda más fácil y te ayudamos a agendar.</p>
+      </div>
+
+      <div class="sedes-layout reveal">
+        <div class="sede-list" role="list">
+
+          <!-- Coordenadas aproximadas (revisar y ajustar con la ubicación exacta de cada sede) -->
+          <button type="button" class="card-sede is-active" role="listitem" data-lat="6.2058" data-lng="-75.5738" aria-pressed="true">
+            <img class="sede-photo" src="System%20design/Imagenes/1_Castropol.png" alt="Equipo veterinario Bivett atendiendo a un paciente en la sede Castropol" loading="lazy" width="992" height="1197">
+            <span class="sede-body">
+              <span class="sede-badge">Urgencias 24/7</span>
+              <h3>En Castropol también está tu vettcino Bivett</h3>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+                Av. El Poblado, atención 24/7
+              </span>
+              <span class="sede-actions">
+                <a class="btn btn-ghost-verde" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20en%20la%20sede%20Castropol" target="_blank" rel="noopener" onclick="event.stopPropagation()">Escríbenos y te guiamos →</a>
+              </span>
+            </span>
+          </button>
+
+          <button type="button" class="card-sede" role="listitem" data-lat="6.2273" data-lng="-75.5673" aria-pressed="false">
+            <img class="sede-photo" src="System%20design/Imagenes/1_Industriales.png" alt="Cuidador con su perro en la sala de espera de la sede Industriales" loading="lazy" width="991" height="1197">
+            <span class="sede-body">
+              <span class="sede-badge">Lun–sáb</span>
+              <h3>En Industriales también está tu vettcino Bivett</h3>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+                Calle 32 #48-45
+              </span>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                Lunes a viernes 9am–6pm · Sábados 8am–5pm
+              </span>
+              <span class="sede-actions">
+                <a class="btn btn-ghost-verde" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20en%20la%20sede%20Industriales" target="_blank" rel="noopener" onclick="event.stopPropagation()">Escríbenos y te guiamos →</a>
+              </span>
+            </span>
+          </button>
+
+          <button type="button" class="card-sede" role="listitem" data-lat="6.1735" data-lng="-75.5605" aria-pressed="false">
+            <img class="sede-photo" src="System%20design/Imagenes/1_Alto%20de%20las%20palmas.png" alt="Pareja con sus dos perros en la recepción de la sede Alto de las Palmas" loading="lazy" width="991" height="1197">
+            <span class="sede-body">
+              <span class="sede-badge">Lun–sáb</span>
+              <h3>En Alto de las Palmas también está tu vettcino Bivett</h3>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+                CC LeMont, Envigado
+              </span>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                Lunes a sábado 9am–6pm
+              </span>
+              <span class="sede-actions">
+                <a class="btn btn-ghost-verde" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20en%20la%20sede%20Alto%20de%20las%20Palmas" target="_blank" rel="noopener" onclick="event.stopPropagation()">Escríbenos y te guiamos →</a>
+              </span>
+            </span>
+          </button>
+
+          <button type="button" class="card-sede" role="listitem" data-lat="6.3313" data-lng="-75.5580" aria-pressed="false">
+            <img class="sede-photo" src="System%20design/Imagenes/1_Bello.png" alt="Perro en la sala de espera de la sede Bello, con el logo de Bivett al fondo" loading="lazy" width="992" height="1197">
+            <span class="sede-body">
+              <span class="sede-badge">Lun–sáb</span>
+              <h3>En Bello también está tu vettcino Bivett</h3>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg>
+                Edificio Tierragro Niquía
+              </span>
+              <span class="meta-row">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+                Lunes a sábado 9am–6pm
+              </span>
+              <span class="sede-actions">
+                <a class="btn btn-ghost-verde" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20agendar%20en%20la%20sede%20Bello" target="_blank" rel="noopener" onclick="event.stopPropagation()">Escríbenos y te guiamos →</a>
+              </span>
+            </span>
+          </button>
+
+        </div>
+
+        <div class="map-panel">
+          <div id="sedesMap"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESEÑAS DE GOOGLE ============ -->
+  <section class="section" id="resenas" style="background:#ffffff;">
+    <div class="container">
+      <div class="section-head section-head-center reveal">
+        <h2>Lo que dicen quienes ya confían <br><span class="text-verde-cta">en su vettcino Bivett</span></h2>
+        <p class="body-muted">Reseñas verificadas directamente desde Google Reviews.</p>
+      </div>
+
+      <div id="google-reviews-widget" class="reviews-grid reveal-stagger">
+        <article class="card-review">
+          <div class="stars" aria-label="5 de 5 estrellas">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+          </div>
+          <p>"Gracias clinica Bivett por tratar con tanto cariño a mi pepe, los médicos, enfermeras y todo el personal son maravillosos profesionales. Recomiendo esta clinica al cien por ciento. Gracias sura y ces por crear este maravilloso espacio para nuestros peludos."</p>
+          <div class="review-author"><span class="avatar">P</span> Patricia Lopera</div>
+        </article>
+        <article class="card-review">
+          <div class="stars" aria-label="5 de 5 estrellas">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+          </div>
+          <p>"El servicio es excelente, así como el amor, paciencia y dedicación con el que tratan a los pacientes. Entienden nuestro dolor, explican todo muy bien, están pendientes de la evolución de las mascotas y tienen la mejor disposición para responder nuestras dudas. 100% recomendado."</p>
+          <div class="review-author"><span class="avatar">N</span> Natalia Garcia</div>
+        </article>
+        <article class="card-review">
+          <div class="stars" aria-label="5 de 5 estrellas">
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+            <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1l2.7 5.9 6.3.7-4.7 4.3 1.3 6.2L10 15.6 4.4 18.1l1.3-6.2L1 7.6l6.3-.7z"/></svg>
+          </div>
+          <p>"La mejor atención, estuve en urgencias con mi perrita. Me atendieron súper rápido, todo el personal fue MUY amable, me explicaron todo de la mejor manera pues yo estaba demasiado nerviosa y estresada. Definitivamente ha sido la mejor veterinaria en la que he estado."</p>
+          <div class="review-author"><span class="avatar">M</span> Maria Camila España</div>
+        </article>
+      </div>
+      <div class="reviews-cta">
+        <a class="btn btn-ghost" href="https://www.google.com/search?sca_esv=bcbe1a3c17fe5261&sxsrf=APpeQnuwDNcJaxc3WVa4_9xihHOkCyLTBQ:1784325190592&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_1GqHq5nzKaRCfwfS8qZ_8tv6bt7qiSIs2tD9uz7F3uLNb8jwmO9ErKAzbOwVWYXHHpPhl4B6_hYBHVvmPlE36LPtbsYYn_C1_TB5pcBIsXUlLxl9w%3D%3D&q=Bivett+Centro+Veterinario+Opiniones&sa=X&ved=2ahUKEwiUlJip2dqVAxXfRDABHT4oAY4Q0bkNegQIPBAH&biw=1396&bih=750&dpr=1.38" target="_blank" rel="noopener">Ver más reseñas →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA INTERMEDIO ============ -->
+  <section class="cta-band reveal">
+    <div class="container">
+      <div class="cta-band-media">
+        <img src="System%20design/Imagenes/1_Modulo%206.png" alt="Cuidadora y veterinaria de Bivett saludando con cariño a un perro" width="1856" height="1493" loading="lazy">
+      </div>
+      <div>
+        <h2>Tu vettcino Bivett está más cerca de lo que crees</h2>
+        <p>Escríbenos y agenda tu cita en la sede que te quede más fácil.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="https://wa.me/573132476474?text=Hola%20Bivett%2C%20quiero%20agendar%20una%20cita" target="_blank" rel="noopener">
+            Agendar cita por WhatsApp
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FORMULARIO SUSCRIPCIÓN ============ -->
+  <section class="section" id="suscripcion" style="background:#f2f2f2;">
+    <div class="container">
+      <div class="form-wrap">
+        <div class="reveal">
+          <h2 class="form-heading">Recibe recordatorios de vacunas, tips de tu vettcino y promos exclusivas antes que nadie</h2>
+          <p class="body-muted">Déjanos tu nombre, correo y sede de interés.</p>
+        </div>
+
+        <div class="form-card reveal">
+          <!--
+            MAILCHIMP — placeholder de integración.
+            Reemplazar la action de abajo por la URL real del formulario/list embed
+            de Mailchimp (y ajustar los atributos "name" de los inputs a los que
+            Mailchimp genere, ej. FNAME, EMAIL) cuando esté disponible.
+          -->
+          <form id="subscribeForm" action="#MAILCHIMP_ACTION_URL_AQUI" method="post" novalidate>
+            <div class="field">
+              <label for="sub-nombre">Nombre <span class="req">*</span></label>
+              <input type="text" id="sub-nombre" name="nombre" autocomplete="name" required>
+            </div>
+            <div class="field">
+              <label for="sub-correo">Correo electrónico <span class="req">*</span></label>
+              <input type="email" id="sub-correo" name="correo" autocomplete="email" required>
+            </div>
+            <div class="field">
+              <label for="sedeTrigger">Sede de interés <span class="req">*</span></label>
+              <div class="custom-select" id="sedeSelect">
+                <button type="button" class="custom-select-trigger" id="sedeTrigger" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="custom-select-value is-placeholder">Elige una sede</span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <ul class="custom-select-list" role="listbox" tabindex="-1" hidden>
+                  <li role="option" data-value="castropol">Castropol</li>
+                  <li role="option" data-value="industriales">Industriales</li>
+                  <li role="option" data-value="alto-de-las-palmas">Alto de las Palmas</li>
+                  <li role="option" data-value="bello">Bello</li>
+                </ul>
+                <input type="hidden" id="sub-sede" name="sede" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-cta btn-block">
+              Quiero recibir mis beneficios
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+            <p class="form-status" id="formStatus" role="status"></p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="section" id="faq" style="background:var(--polar);">
+    <div class="container">
+      <div class="section-head section-head-center reveal">
+        <h2>Todo lo que quieres saber antes de agendar</h2>
+      </div>
+
+      <div class="faq-list reveal">
+        <details class="faq-item">
+          <summary>¿Dónde hay una veterinaria cerca de mí en Medellín o Envigado?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">Bivett tiene 4 sedes: Castropol en la Av. El Poblado (Medellín), Industriales en la Calle 32, Alto de las Palmas en el CC LeMont (Envigado) y Bello en el Edificio Tierragro Niquía. Escríbenos por WhatsApp y te ayudamos a elegir la más cercana a tu casa.</p></div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Bivett atiende urgencias veterinarias las 24 horas?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">Sí. La sede Castropol atiende urgencias las 24 horas, todos los días, con equipo de rayos X y cirugía disponible para intervenciones inmediatas.</p></div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Cada cuánto debo llevar a mi perro o gato a una consulta veterinaria?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">Como regla general, un perro o gato adulto y sano debe tener al menos una consulta general al año para revisión preventiva y actualización de vacunas. Cachorros, gatitos y animales mayores de 7 años suelen necesitar controles más frecuentes.</p></div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Necesito cita previa para ir a Bivett o puedo llegar sin agendar?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">Para consulta general, vacunación, profilaxis o desparasitación te recomendamos agendar por WhatsApp así te atendemos sin espera. En caso de urgencia, la sede Castropol recibe pacientes las 24 horas sin necesidad de cita previa.</p></div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Qué es la profilaxis dental en perros y gatos y por qué es importante?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">La profilaxis es la limpieza dental veterinaria que retira el sarro y la placa bacteriana, previene enfermedad periodontal y evita que problemas dentales que no se ven a simple vista avancen en silencio.</p></div>
+        </details>
+        <details class="faq-item">
+          <summary>¿Qué diferencia hay entre las sedes Bivett en Medellín y Envigado?
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="faq-answer"><p style="margin:0;">Todas las sedes ofrecen consulta general, vacunación, profilaxis y desparasitación. Castropol, en Medellín, es la única con atención 24/7 y urgencias. Industriales, Alto de las Palmas y Bello atienden en horario diurno de lunes a sábado.</p></div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="System%20design/Logos/1_Logo sura fondo oscuro-06.png" alt="Bivett · SURA · CES" width="1044" height="576" loading="lazy">
+      </div>
+      <div class="footer-info-block">
+        <h3>Tu vettcino Bivett, cerca de ti</h3>
+        <div class="footer-locations">Castropol · Industriales · Alto de las Palmas · Bello</div>
+      </div>
+      <div class="footer-social-block">
+        <h3 class="footer-social-heading">Síguenos en</h3>
+        <div class="footer-social">
+          <a href="https://www.instagram.com/somosbivett/" target="_blank" rel="noopener">
+            <span class="social-icon" aria-hidden="true">
+              <img class="icon-default" src="System%20design/Iconograf%C3%ADa/1_Instagram.png" alt="" width="801" height="801">
+              <img class="icon-hover" src="System%20design/Iconograf%C3%ADa/1_Instagram-verde.png" alt="" width="801" height="801">
+            </span>
+            @somosbivett
+          </a>
+          <a href="https://wa.me/573132476474" target="_blank" rel="noopener">
+            <span class="social-icon" aria-hidden="true">
+              <img class="icon-default" src="System%20design/Iconograf%C3%ADa/1_Whatsapp-74.png" alt="" width="801" height="801">
+              <img class="icon-hover" src="System%20design/Iconograf%C3%ADa/1_Whatsapp-74-verde.png" alt="" width="801" height="801">
+            </span>
+            3132476474
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Institución sujeta a inspección y vigilancia del Ministerio de Educación Nacional.</span>
+      <a href="https://bivett.com/content/uploads/2025/03/bivett-politica-de-tratamiento-de-datos-personales.pdf" target="_blank" rel="noopener">Conoce nuestra política de tratamiento de datos</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ WHATSAPP FAB (fijo en todas las secciones) ============ -->
+<a class="whatsapp-fab" href="https://wa.me/573132476474?text=Hola%20Bivett%2C%20quiero%20agendar%20una%20cita" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+  <img src="System%20design/Iconograf%C3%ADa/1_Whatsapp%20elemento%20fijo.png" alt="" width="801" height="801">
+</a>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---- Mobile nav toggle ----
+  var navToggle = document.getElementById("navToggle");
+  var mobileMenu = document.getElementById("mobileMenu");
+  navToggle.addEventListener("click", function(){
+    var isOpen = mobileMenu.classList.toggle("is-open");
+    navToggle.setAttribute("aria-expanded", String(isOpen));
+  });
+  mobileMenu.querySelectorAll("a").forEach(function(link){
+    link.addEventListener("click", function(){
+      mobileMenu.classList.remove("is-open");
+      navToggle.setAttribute("aria-expanded", "false");
+    });
+  });
+
+  // ---- Hero carousel (fade, autoplay, loop) ----
+  var heroCarousel = document.getElementById("heroCarousel");
+  var heroSlides = heroCarousel.querySelectorAll(".hero-slide");
+  var heroIndex = 0;
+  if (heroSlides.length > 1){
+    setInterval(function(){
+      heroSlides[heroIndex].classList.remove("is-active");
+      heroIndex = (heroIndex + 1) % heroSlides.length;
+      heroSlides[heroIndex].classList.add("is-active");
+    }, 3000);
+  }
+
+  // ---- Servicios slider ----
+  var servicesSlider = document.getElementById("servicesSlider");
+  var servicesPrev = document.getElementById("servicesPrev");
+  var servicesNext = document.getElementById("servicesNext");
+  function scrollServices(dir){
+    var card = servicesSlider.querySelector(".card-service");
+    var step = card ? card.getBoundingClientRect().width + 20 : 300;
+    servicesSlider.scrollBy({ left: dir * step, behavior: "smooth" });
+  }
+  servicesPrev.addEventListener("click", function(){ scrollServices(-1); });
+  servicesNext.addEventListener("click", function(){ scrollServices(1); });
+  function updateServicesArrows(){
+    var max = servicesSlider.scrollWidth - servicesSlider.clientWidth - 1;
+    servicesPrev.disabled = servicesSlider.scrollLeft <= 0;
+    servicesNext.disabled = servicesSlider.scrollLeft >= max;
+  }
+  servicesSlider.addEventListener("scroll", updateServicesArrows, { passive: true });
+  window.addEventListener("resize", updateServicesArrows);
+  updateServicesArrows();
+
+  // ---- Sede <-> Map (Leaflet, un solo mapa con los 4 pines) ----
+  var sedeButtons = document.querySelectorAll(".card-sede");
+  var pinIcon = L.divIcon({
+    className: "sede-pin",
+    html: '<div class="sede-pin-inner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11.5A7 7 0 0 0 5 9.5C5 14.7 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.3"/></svg></div>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 34]
+  });
+  var sedesMap = L.map("sedesMap", { scrollWheelZoom: false });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+    maxZoom: 19
+  }).addTo(sedesMap);
+
+  var markers = [];
+  var bounds = [];
+  sedeButtons.forEach(function(btn, i){
+    var lat = parseFloat(btn.getAttribute("data-lat"));
+    var lng = parseFloat(btn.getAttribute("data-lng"));
+    var name = btn.querySelector("h3").textContent.trim();
+    var gmapsUrl = "https://www.google.com/maps/search/?api=1&query=" + lat + "," + lng;
+    var marker = L.marker([lat, lng], { icon: pinIcon })
+      .addTo(sedesMap)
+      .bindPopup(name + '<br><a href="' + gmapsUrl + '" target="_blank" rel="noopener">Ver en Google Maps →</a>');
+    marker.on("click", function(){ window.open(gmapsUrl, "_blank", "noopener"); });
+    markers.push(marker);
+    bounds.push([lat, lng]);
+  });
+  sedesMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+
+  function setActiveSede(index){
+    sedeButtons.forEach(function(b, i){
+      b.classList.toggle("is-active", i === index);
+      b.setAttribute("aria-pressed", i === index ? "true" : "false");
+    });
+    markers.forEach(function(m, i){
+      var el = m.getElement();
+      if (el) { el.classList.toggle("is-active", i === index); }
+    });
+  }
+
+  sedeButtons.forEach(function(btn, i){
+    btn.addEventListener("click", function(){
+      setActiveSede(i);
+      markers[i].openPopup();
+      sedesMap.panTo(markers[i].getLatLng());
+    });
+    btn.addEventListener("mouseenter", function(){
+      markers[i].openPopup();
+    });
+  });
+  setActiveSede(0);
+
+  // ---- Hide WhatsApp FAB while the footer is in view (it sits in the same
+  // bottom-right corner and would otherwise block the footer's own links) ----
+  var whatsappFab = document.querySelector(".whatsapp-fab");
+  var siteFooter = document.querySelector(".site-footer");
+  if ("IntersectionObserver" in window && whatsappFab && siteFooter){
+    var footerIo = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        whatsappFab.classList.toggle("is-hidden", entry.isIntersecting);
+      });
+    }, { threshold: 0 });
+    footerIo.observe(siteFooter);
+  }
+
+  // ---- Scroll reveal (respects prefers-reduced-motion via CSS) ----
+  var revealEls = document.querySelectorAll(".reveal, .reveal-stagger");
+  if ("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          entry.target.classList.add("is-visible");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add("is-visible"); });
+  }
+
+  // ---- Custom "sede de interés" dropdown ----
+  var sedeSelect = document.getElementById("sedeSelect");
+  var sedeTrigger = document.getElementById("sedeTrigger");
+  var sedeList = sedeSelect.querySelector(".custom-select-list");
+  var sedeValueLabel = sedeSelect.querySelector(".custom-select-value");
+  var sedeHiddenInput = document.getElementById("sub-sede");
+  var sedeOptions = sedeSelect.querySelectorAll("li[role='option']");
+
+  function closeSedeList(){
+    sedeList.hidden = true;
+    sedeTrigger.setAttribute("aria-expanded", "false");
+  }
+  function openSedeList(){
+    sedeList.hidden = false;
+    sedeTrigger.setAttribute("aria-expanded", "true");
+  }
+  sedeTrigger.addEventListener("click", function(){
+    if (sedeList.hidden) { openSedeList(); } else { closeSedeList(); }
+  });
+  sedeOptions.forEach(function(opt){
+    opt.addEventListener("click", function(){
+      sedeOptions.forEach(function(o){ o.classList.remove("is-active"); });
+      opt.classList.add("is-active");
+      sedeValueLabel.textContent = opt.textContent.trim();
+      sedeValueLabel.classList.remove("is-placeholder");
+      sedeHiddenInput.value = opt.getAttribute("data-value");
+      closeSedeList();
+      sedeTrigger.focus();
+    });
+  });
+  document.addEventListener("click", function(e){
+    if (!sedeSelect.contains(e.target)) { closeSedeList(); }
+  });
+  sedeSelect.addEventListener("keydown", function(e){
+    if (e.key === "Escape") { closeSedeList(); sedeTrigger.focus(); }
+  });
+
+  // ---- Subscribe form: interface only, not connected to Mailchimp yet ----
+  var form = document.getElementById("subscribeForm");
+  var status = document.getElementById("formStatus");
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!form.checkValidity() || !sedeHiddenInput.value){
+      form.reportValidity();
+      return;
+    }
+    status.textContent = "Formulario listo para conectar con Mailchimp. Aún no se ha enviado ningún dato.";
+    status.style.color = "var(--verde-profundo)";
+    status.classList.add("is-visible");
+  });
+})();
+</script>
+
+<!-- ============ FAQPage schema.org (SEO/GEO/AEO) ============ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Dónde hay una veterinaria cerca de mí en Medellín o Envigado?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bivett tiene 4 sedes: Castropol en la Av. El Poblado (Medellín), Industriales en la Calle 32, Alto de las Palmas en el CC LeMont (Envigado) y Bello en el Edificio Tierragro Niquía. Escríbenos por WhatsApp y te ayudamos a elegir la más cercana a tu casa."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Bivett atiende urgencias veterinarias las 24 horas?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. La sede Castropol atiende urgencias las 24 horas, todos los días, con equipo de rayos X y cirugía disponible para intervenciones inmediatas."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cada cuánto debo llevar a mi perro o gato a una consulta veterinaria?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Como regla general, un perro o gato adulto y sano debe tener al menos una consulta general al año para revisión preventiva y actualización de vacunas. Cachorros, gatitos y animales mayores de 7 años suelen necesitar controles más frecuentes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Necesito cita previa para ir a Bivett o puedo llegar sin agendar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Para consulta general, vacunación, profilaxis o desparasitación te recomendamos agendar por WhatsApp así te atendemos sin espera. En caso de urgencia, la sede Castropol recibe pacientes las 24 horas sin necesidad de cita previa."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué es la profilaxis dental en perros y gatos y por qué es importante?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "La profilaxis es la limpieza dental veterinaria que retira el sarro y la placa bacteriana, previene enfermedad periodontal y evita que problemas dentales que no se ven a simple vista avancen en silencio."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué diferencia hay entre las sedes Bivett en Medellín y Envigado?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Todas las sedes ofrecen consulta general, vacunación, profilaxis y desparasitación. Castropol, en Medellín, es la única con atención 24/7 y urgencias. Industriales, Alto de las Palmas y Bello atienden en horario diurno de lunes a sábado."
+      }
+    }
+  ]
+}
+</script>
+
+</body>
+</html>
