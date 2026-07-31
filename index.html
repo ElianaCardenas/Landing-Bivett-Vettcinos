@@ -362,8 +362,8 @@
   .services-picker{display:grid;grid-template-columns:1fr;gap:16px;}
   @media (min-width:960px){
     .services-picker{
-      display:grid;grid-template-columns:300px 340px;align-items:stretch;
-      gap:20px;max-width:660px;margin:0 auto;
+      display:grid;grid-template-columns:300px 380px;align-items:stretch;
+      gap:20px;max-width:700px;margin:0 auto;
     }
   }
   .services-picker > *{min-width:0;}
@@ -387,11 +387,15 @@
 
   .services-panel{
     background:var(--white);border-radius:var(--radius-card);box-shadow:var(--shadow-card);
-    overflow:hidden;
+    overflow:hidden;height:100%;
     padding:24px;display:flex;flex-direction:column;
   }
-  .services-panel-media{width:calc(100% + 48px);aspect-ratio:16/9;overflow:hidden;border-radius:12px 12px 0 0;margin:-24px -24px 24px;}
+  .services-panel-media{
+    width:calc(100% + 48px);flex:0 0 50%;overflow:hidden;
+    border-radius:12px 12px 0 0;margin:-24px -24px 24px;
+  }
   .services-panel-media img{width:100%;height:100%;object-fit:cover;display:block;border-radius:0;transition:opacity .15s ease;}
+  .services-panel-content{flex:1 1 50%;display:flex;flex-direction:column;justify-content:center;min-height:0;}
   .services-panel h3{margin-bottom:12px;color:var(--navy);}
   .services-panel p{color:var(--piedra);margin-bottom:24px;font-size:16px;}
   .services-panel .btn-service{
@@ -843,9 +847,11 @@
           <div class="services-panel-media">
             <img id="servicesPanelPhoto" src="System%20design/Servicios/1_Consulta%20general.png" alt="Veterinario y auxiliar atendiendo a una paciente con su perro en consulta general" width="1081" height="858">
           </div>
-          <h3 id="servicesPanelTitle">Consulta general</h3>
-          <p id="servicesPanelText">Para saber cómo está y actuar a tiempo si algo cambia.</p>
-          <a class="btn btn-service" id="servicesPanelCta" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20consulta%20general%20para%20mi%20perro%2Fgato." target="_blank" rel="noopener">Pregunta por consulta general →</a>
+          <div class="services-panel-content">
+            <h3 id="servicesPanelTitle">Consulta general</h3>
+            <p id="servicesPanelText">Para saber cómo está y actuar a tiempo si algo cambia.</p>
+            <a class="btn btn-service" id="servicesPanelCta" href="https://wa.me/573132476474?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20consulta%20general%20para%20mi%20perro%2Fgato." target="_blank" rel="noopener">Pregunta por consulta general →</a>
+          </div>
         </div>
       </div>
     </div>
